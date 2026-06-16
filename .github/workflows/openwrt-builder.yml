@@ -29,15 +29,47 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Before freeing up disk space
+    - name: "Optimize Disk Space"
+      uses: "hugoalh/disk-space-optimizer-ghaction@v0.8.1"
+      with:
+        operate_sudo: "True"
+        # 清理范围：.+ 匹配所有可删文件
+        general_include: ".+"
+        # 排除必要工具链和编译依赖
+        general_exclude: |-
+            ^GCC$
+            ^G\+\+$
+            Clang
+            LLVM
+            Rust
+            Go
+            python3
+            make
+            git
+        docker_include: ".+"
+        docker_prune: "True"
+        docker_clean: "True"
+        apt_prune: "True"
+        apt_clean: "True"
+        homebrew_prune: "True"
+        homebrew_clean: "True"
+        npm_prune: "True"
+        npm_clean: "True"
+        os_swap: "True"
+
+    - name: Free up disk space complete
       run: |
-        echo "Before freeing up disk space"
+        echo "Free up disk space complete"
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
+
+    #=========================================================================================================
+    # Checkout and Initialization
+    - name: Checkout
+      uses: actions/checkout@main
 
     - name: Initialization environment
       env:
@@ -55,23 +87,6 @@ jobs:
           sudo -E apt clean
           sudo -E timedatectl set-timezone "Asia/Shanghai"
           sudo chown $USER:$GROUPS $GITHUB_WORKSPACE
-
-    - name: Checkout
-      uses: actions/checkout@main
-
-    - name: Free Disk Space (Ubuntu)
-      uses: jlumbroso/free-disk-space@main
-      with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
 
     - name: Clone source code
       working-directory: ./
